@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadow Typing</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4A90E2',secondary:'#F5F5F5'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+font-family: 'Inter', sans-serif;
+background-color: #FFFFFF;
+color: #333333;
+background-image: url("https://readdy.ai/api/search-image?query=abstract%2520geometric%2520pattern%2520with%2520light%2520blue%2520and%2520white%2520colors%252C%2520subtle%2520keyboard%2520keys%2520pattern%252C%2520minimal%2520design%252C%2520soft%2520gradients%252C%2520perfect%2520for%2520website%2520background%252C%2520non-distracting%252C%2520professional%2520look%252C%2520clean%2520aesthetic&width=1200&height=800&seq=bg1&orientation=landscape");
+background-size: cover;
+background-attachment: fixed;
+background-position: center;
+}
+.correct {
+color: #27AE60;
+}
+.incorrect {
+color: #E74C3C;
+text-decoration: underline;
+}
+.current {
+background-color: rgba(74, 144, 226, 0.2);
+border-radius: 2px;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+-webkit-appearance: none;
+margin: 0;
+}
+.timer-progress {
+transition: width 0.1s linear;
+}
+.typing-container {
+letter-spacing: 0.5px;
+line-height: 1.7;
+}
+.typing-text span {
+position: relative;
+}
+input:focus {
+outline: none;
+}
+</style>
+</head>
+<body class="text-gray-800 flex flex-col min-h-screen">
+<div class="fixed w-full top-0 bg-white bg-opacity-90 backdrop-blur-sm shadow-md z-10">
+<div class="flex items-center justify-between px-4 py-3">
+<h1 class="text-xl font-['Pacifico'] text-primary">Shadow Typing</h1>
+<div class="flex items-center space-x-2">
+<div class="w-8 h-8 flex items-center justify-center">
+<i class="ri-question-line ri-lg"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center">
+<i class="ri-settings-3-line ri-lg"></i>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-16 mb-20 px-4 py-4 flex-1 flex flex-col relative z-0">
+<div class="mb-4">
+<h2 class="text-xl font-semibold text-center mb-4">Shadow Typing Test</h2>
+<div class="bg-gray-100 p-1 rounded-full flex justify-between mb-6">
+<button id="time-15" class="flex-1 py-2 text-center rounded-full bg-primary text-white text-sm font-medium">15s</button>
+<button id="time-30" class="flex-1 py-2 text-center rounded-full text-gray-700 text-sm font-medium">30s</button>
+<button id="time-60" class="flex-1 py-2 text-center rounded-full text-gray-700 text-sm font-medium">60s</button>
+</div>
+</div>
+<div class="relative mb-4">
+<div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+<div id="timer-progress" class="timer-progress h-full bg-primary rounded-full w-full"></div>
+</div>
+</div>
+<div class="bg-secondary bg-opacity-90 p-4 rounded-lg mb-4 typing-container shadow-md">
+<p id="typing-text" class="typing-text text-base leading-relaxed"></p>
+</div>
+<div class="relative mb-6">
+<input id="typing-input" type="text" class="w-full p-4 border border-gray-300 rounded-lg text-base bg-white bg-opacity-90 backdrop-blur-sm shadow-sm" placeholder="Start typing here..." disabled>
+<div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-keyboard-line"></i>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-4 mb-6">
+<div class="bg-white bg-opacity-90 backdrop-blur-sm p-4 rounded-lg shadow-md border border-gray-100 text-center">
+<div class="w-8 h-8 mx-auto mb-1 flex items-center justify-center">
+<i class="ri-speed-up-line ri-xl text-primary"></i>
+</div>
+<p id="wpm" class="text-xl font-semibold">0</p>
+<p class="text-xs text-gray-500">WPM</p>
+</div>
+<div class="bg-white bg-opacity-90 backdrop-blur-sm p-4 rounded-lg shadow-md border border-gray-100 text-center">
+<div class="w-8 h-8 mx-auto mb-1 flex items-center justify-center">
+<i class="ri-check-double-line ri-xl text-primary"></i>
+</div>
+<p id="accuracy" class="text-xl font-semibold">100%</p>
+<p class="text-xs text-gray-500">Accuracy</p>
+</div>
+<div class="bg-white bg-opacity-90 backdrop-blur-sm p-4 rounded-lg shadow-md border border-gray-100 text-center">
+<div class="w-8 h-8 mx-auto mb-1 flex items-center justify-center">
+<i class="ri-error-warning-line ri-xl text-primary"></i>
+</div>
+<p id="errors" class="text-xl font-semibold">0</p>
+<p class="text-xs text-gray-500">Errors</p>
+</div>
+</div>
+<button id="start-btn" class="w-full py-4 bg-primary text-white font-medium rounded-button cursor-pointer shadow-md hover:shadow-lg transition-shadow">Start Shadow Typing</button>
+</div>
+<div id="result-modal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-20 hidden">
+<div class="bg-white rounded-lg p-6 w-[90%] max-w-md shadow-xl">
+<h3 class="text-xl font-semibold mb-4 text-center">Shadow Typing Results</h3>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-gray-50 bg-opacity-80 p-3 rounded-lg text-center shadow-sm">
+<p class="text-sm text-gray-500">Typing Speed</p>
+<p id="result-wpm" class="text-2xl font-semibold text-primary">0 WPM</p>
+</div>
+<div class="bg-gray-50 bg-opacity-80 p-3 rounded-lg text-center shadow-sm">
+<p class="text-sm text-gray-500">Accuracy</p>
+<p id="result-accuracy" class="text-2xl font-semibold text-primary">100%</p>
+</div>
+<div class="bg-gray-50 bg-opacity-80 p-3 rounded-lg text-center shadow-sm">
+<p class="text-sm text-gray-500">Errors</p>
+<p id="result-errors" class="text-2xl font-semibold text-primary">0</p>
+</div>
+<div class="bg-gray-50 bg-opacity-80 p-3 rounded-lg text-center shadow-sm">
+<p class="text-sm text-gray-500">Time</p>
+<p id="result-time" class="text-2xl font-semibold text-primary">15s</p>
+</div>
+</div>
+<div class="flex justify-center">
+<button id="close-result" class="px-6 py-3 bg-primary text-white font-medium rounded-button cursor-pointer shadow-md hover:shadow-lg transition-shadow">Try Again</button>
+</div>
+</div>
+</div>
+<script>
+const typingText = document.getElementById('typing-text');
+const typingInput = document.getElementById('typing-input');
+const startBtn = document.getElementById('start-btn');
+const wpmElement = document.getElementById('wpm');
+const accuracyElement = document.getElementById('accuracy');
+const errorsElement = document.getElementById('errors');
+const timerProgress = document.getElementById('timer-progress');
+const resultModal = document.getElementById('result-modal');
+const closeResult = document.getElementById('close-result');
+const resultWpm = document.getElementById('result-wpm');
+const resultAccuracy = document.getElementById('result-accuracy');
+const resultErrors = document.getElementById('result-errors');
+const resultTime = document.getElementById('result-time');
+const timeButtons = [
+document.getElementById('time-15'),
+document.getElementById('time-30'),
+document.getElementById('time-60')
+];
+let timer = null;
+let maxTime = 15; // Default time in seconds
+let timeLeft = maxTime;
+let charIndex = 0;
+let mistakes = 0;
+let isTyping = false;
+let startTime;
+const commonWords = [
+"the", "be", "to", "of", "and", "a", "in", "that", "have", "I",
+"it", "for", "not", "on", "with", "he", "as", "you", "do", "at",
+"this", "but", "his", "by", "from", "they", "we", "say", "her", "she",
+"or", "an", "will", "my", "one", "all", "would", "there", "their", "what",
+"so", "up", "out", "if", "about", "who", "get", "which", "go", "me",
+"when", "make", "can", "like", "time", "no", "just", "him", "know", "take",
+"people", "into", "year", "your", "good", "some", "could", "them", "see", "other",
+"than", "then", "now", "look", "only", "come", "its", "over", "think", "also",
+"back", "after", "use", "two", "how", "our", "work", "first", "well", "way",
+"even", "new", "want", "because", "any", "these", "give", "day", "most", "us"
+];
+function generateRandomText(wordCount = 50) {
+let result = [];
+// Start with capital letter
+let firstWord = commonWords[Math.floor(Math.random() * commonWords.length)];
+result.push(firstWord.charAt(0).toUpperCase() + firstWord.slice(1));
+// Generate remaining words
+for (let i = 1; i < wordCount; i++) {
+let word = commonWords[Math.floor(Math.random() * commonWords.length)];
+// Add some punctuation occasionally
+if (i > 0 && i % 8 === 0) {
+result[result.length - 1] += ".";
+// Start new sentence with capital letter
+word = word.charAt(0).toUpperCase() + word.slice(1);
+} else if (i > 0 && i % 12 === 0) {
+result[result.length - 1] += ",";
+}
+result.push(word);
+}
+// Ensure text ends with a period
+if (!result[result.length - 1].endsWith(".")) {
+result[result.length - 1] += ".";
+}
+return result.join(" ");
+}
+const paragraphs = [
+"The quick brown fox jumps over the lazy dog. This pangram contains every letter of the English alphabet at least once. Typing practice helps improve your speed and accuracy over time.",
+"Programming is the process of creating a set of instructions that tell a computer how to perform a task. Programming can be done using a variety of computer programming languages.",
+"Artificial intelligence is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans. AI research has been defined as the field of study.",
+"The Internet is a global system of interconnected computer networks that use the standard Internet protocol suite to link devices worldwide. It is a network of networks that consists of private, public, academic, business, and government networks.",
+"Cybersecurity is the practice of protecting systems, networks, and programs from digital attacks. These cyberattacks are usually aimed at accessing, changing, or destroying sensitive information.",
+"Cloud computing is the on-demand availability of computer system resources, especially data storage and computing power, without direct active management by the user.",
+"Machine learning is the study of computer algorithms that improve automatically through experience. It is seen as a subset of artificial intelligence.",
+"Data science is an interdisciplinary field that uses scientific methods, processes, algorithms and systems to extract knowledge and insights from structured and unstructured data.",
+"Virtual reality is a simulated experience that can be similar to or completely different from the real world. Applications of virtual reality include entertainment and education.",
+"Blockchain is a growing list of records, called blocks, that are linked using cryptography. Each block contains a cryptographic hash of the previous block, a timestamp, and transaction data."
+];
+function loadParagraph() {
+// 50% chance to use random text instead of predefined paragraphs
+if (Math.random() > 0.5) {
+const randomText = generateRandomText(Math.floor(Math.random() * 30) + 30); // 30-60 words
+typingText.innerHTML = '';
+randomText.split('').forEach(char => {
+typingText.innerHTML += `<span>${char}</span>`;
+});
+} else {
+const randomIndex = Math.floor(Math.random() * paragraphs.length);
+typingText.innerHTML = '';
+paragraphs[randomIndex].split('').forEach(char => {
+typingText.innerHTML += `<span>${char}</span>`;
+});
+}
+typingText.querySelectorAll('span')[0].classList.add('current');
+document.addEventListener('keydown', () => typingInput.focus());
+typingText.addEventListener('click', () => typingInput.focus());
+}
+function initTyping() {
+const characters = typingText.querySelectorAll('span');
+const typedChar = typingInput.value.charAt(charIndex);
+if (charIndex < characters.length - 1 && timeLeft > 0) {
+if (!isTyping) {
+startTime = new Date().getTime();
+timer = setInterval(initTimer, 100);
+isTyping = true;
+}
+if (typedChar == null) {
+charIndex--;
+if (characters[charIndex].classList.contains('incorrect')) {
+mistakes--;
+}
+characters[charIndex].classList.remove('correct', 'incorrect');
+characters[charIndex].classList.add('current');
+characters[charIndex + 1].classList.remove('current');
+} else {
+if (characters[charIndex].innerText === typedChar) {
+characters[charIndex].classList.add('correct');
+} else {
+mistakes++;
+characters[charIndex].classList.add('incorrect');
+}
+characters[charIndex].classList.remove('current');
+charIndex++;
+if (charIndex < characters.length) {
+characters[charIndex].classList.add('current');
+}
+}
+let wpm = Math.round((charIndex - mistakes) * 60 / (maxTime - timeLeft) / 5);
+wpm = wpm < 0 || !wpm || wpm === Infinity ? 0 : wpm;
+const accuracy = charIndex > 0 ? Math.round(((charIndex - mistakes) / charIndex) * 100) : 100;
+wpmElement.innerText = wpm;
+accuracyElement.innerText = `${accuracy}%`;
+errorsElement.innerText = mistakes;
+} else {
+clearInterval(timer);
+typingInput.value = '';
+showResults();
+}
+}
+function initTimer() {
+if (timeLeft > 0) {
+timeLeft -= 0.1;
+const progressWidth = (timeLeft / maxTime) * 100;
+timerProgress.style.width = `${progressWidth}%`;
+if (timeLeft <= 5) {
+timerProgress.classList.add('bg-red-500');
+timerProgress.classList.remove('bg-primary');
+}
+} else {
+clearInterval(timer);
+showResults();
+}
+}
+function showResults() {
+isTyping = false;
+startBtn.innerText = 'Start Shadow Typing';
+typingInput.disabled = true;
+const wpm = parseInt(wpmElement.innerText);
+const accuracy = accuracyElement.innerText;
+const errors = parseInt(errorsElement.innerText);
+resultWpm.innerText = `${wpm} WPM`;
+resultAccuracy.innerText = accuracy;
+resultErrors.innerText = errors;
+resultTime.innerText = `${maxTime}s`;
+resultModal.classList.remove('hidden');
+}
+function resetTest() {
+clearInterval(timer);
+timeLeft = maxTime;
+charIndex = 0;
+mistakes = 0;
+isTyping = false;
+typingInput.value = '';
+typingInput.disabled = true;
+timerProgress.style.width = '100%';
+timerProgress.classList.remove('bg-red-500');
+timerProgress.classList.add('bg-primary');
+wpmElement.innerText = '0';
+accuracyElement.innerText = '100%';
+errorsElement.innerText = '0';
+startBtn.innerText = 'Start Shadow Typing';
+loadParagraph();
+}
+function setTimeMode(seconds, buttonIndex) {
+maxTime = seconds;
+timeLeft = maxTime;
+timeButtons.forEach((button, index) => {
+if (index === buttonIndex) {
+button.classList.add('bg-primary', 'text-white');
+button.classList.remove('text-gray-700');
+} else {
+button.classList.remove('bg-primary', 'text-white');
+button.classList.add('text-gray-700');
+}
+});
+resetTest();
+}
+startBtn.addEventListener('click', () => {
+if (startBtn.innerText === 'Start Shadow Typing') {
+resetTest();
+typingInput.disabled = false;
+typingInput.focus();
+startBtn.innerText = 'Reset';
+} else {
+resetTest();
+}
+});
+typingInput.addEventListener('input', initTyping);
+closeResult.addEventListener('click', () => {
+resultModal.classList.add('hidden');
+resetTest();
+});
+timeButtons[0].addEventListener('click', () => setTimeMode(15, 0));
+timeButtons[1].addEventListener('click', () => setTimeMode(30, 1));
+timeButtons[2].addEventListener('click', () => setTimeMode(60, 2));
+window.addEventListener('load', () => {
+loadParagraph();
+});
+</script>
+</body>
+</html>
